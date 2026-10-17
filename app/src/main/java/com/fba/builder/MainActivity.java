@@ -384,7 +384,7 @@ public class MainActivity extends Activity {
         code.setGravity(Gravity.TOP | Gravity.START);
         code.setMinLines(10);
         code.setTextColor(WHITE);
-        code.setHintColor(MUTED);
+        code.setHintTextColor(MUTED);
         code.setHint("Tulis kode di sini...");
         code.setPadding(14, 14, 14, 14);
         code.setBackground(shape(PANEL, CYAN));
