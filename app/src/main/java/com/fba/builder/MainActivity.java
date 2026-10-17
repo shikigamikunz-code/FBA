@@ -6,513 +6,393 @@ import android.os.Handler;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.graphics.BitmapFactory;
-import android.graphics.Bitmap;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import android.net.Uri;
-
 import java.util.ArrayList;
 
 public class MainActivity extends Activity {
+    int bg = Color.rgb(3, 10, 24);
+    int panel = Color.rgb(7, 23, 43);
+    int cyan = Color.rgb(0, 210, 255);
+    int blue = Color.rgb(0, 105, 255);
+    int white = Color.WHITE;
+    int muted = Color.rgb(150, 180, 210);
 
-    private final int BG = Color.rgb(5, 12, 27);
-    private final int PANEL = Color.rgb(12, 27, 48);
-    private final int CYAN = Color.rgb(0, 217, 255);
-    private final int WHITE = Color.WHITE;
-    private final int MUTED = Color.rgb(160, 180, 205);
-
-    private LinearLayout root;
-    private LinearLayout content;
-    private TextView status;
-    private EditText nameInput;
-    private TextView iconLabel;
-    private ImageView iconPreview;
-    private Uri selectedImage;
-    private final ArrayList<String> projects = new ArrayList<>();
-    private final Handler handler = new Handler();
+    LinearLayout page, body;
+    EditText appName, developer;
+    TextView iconText;
+    Uri chosenIcon;
+    ArrayList<String> projects = new ArrayList<>();
+    Handler handler = new Handler();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
-        showSplash();
+    public void onCreate(Bundle b) {
+        super.onCreate(b);
+        getWindow().setStatusBarColor(bg);
+        getWindow().setNavigationBarColor(bg);
+        splash();
     }
 
-    private GradientDrawable shape(int color, int stroke) {
+    GradientDrawable shape(int color, int stroke) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        d.setCornerRadius(22);
+        d.setCornerRadius(20);
         if (stroke != 0) d.setStroke(2, stroke);
         return d;
     }
 
-    private TextView text(String value, int size, int color) {
+    TextView label(String s, int size, int color) {
         TextView t = new TextView(this);
-        t.setText(value);
+        t.setText(s);
         t.setTextSize(size);
         t.setTextColor(color);
-        t.setGravity(Gravity.CENTER_VERTICAL);
-        t.setPadding(4, 5, 4, 5);
+        t.setPadding(5, 7, 5, 7);
         return t;
     }
 
-    private void showSplash() {
-        LinearLayout splash = new LinearLayout(this);
-        splash.setOrientation(LinearLayout.VERTICAL);
-        splash.setGravity(Gravity.CENTER);
-        splash.setPadding(30, 30, 30, 30);
-        splash.setBackgroundColor(BG);
-        setContentView(splash);
+    void splash() {
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(1);
+        l.setGravity(Gravity.CENTER);
+        l.setPadding(25, 25, 25, 25);
+        l.setBackgroundColor(bg);
+        setContentView(l);
 
-        TextView logo = text("FBA", 58, CYAN);
+        TextView logo = label("FBA", 64, cyan);
+        logo.setTypeface(null, Typeface.BOLD);
         logo.setGravity(Gravity.CENTER);
-        logo.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        splash.addView(logo);
+        l.addView(logo);
 
-        TextView sub = text("FREE BUILD ANDROID", 15, WHITE);
+        TextView sub = label("FREE BUILD ANDROID", 15, white);
         sub.setGravity(Gravity.CENTER);
-        splash.addView(sub);
+        l.addView(sub);
 
-        TextView tagline = text(
-            "CREATE YOUR ANDROID PROJECT",
-            11, MUTED
-        );
-        tagline.setGravity(Gravity.CENTER);
-        splash.addView(tagline);
+        ProgressBar p = new ProgressBar(this, null,
+                android.R.attr.progressBarStyleHorizontal);
+        p.setMax(100);
+        p.setProgressTintList(
+                android.content.res.ColorStateList.valueOf(cyan));
+        LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(
+                -1, 9);
+        pp.setMargins(0, 35, 0, 0);
+        l.addView(p, pp);
 
-        View space = new View(this);
-        splash.addView(space, new LinearLayout.LayoutParams(1, 35));
+        TextView txt = label("INITIALIZING FBA...", 13, cyan);
+        txt.setGravity(Gravity.CENTER);
+        l.addView(txt);
 
-        android.widget.ProgressBar progress =
-            new android.widget.ProgressBar(
-                this, null,
-                android.R.attr.progressBarStyleHorizontal
-            );
-        progress.setMax(100);
-        progress.setProgress(0);
-        progress.setProgressTintList(
-            android.content.res.ColorStateList.valueOf(CYAN)
-        );
-        splash.addView(progress,
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 8
-            ));
-
-        TextView loading = text("INITIALIZING FBA...", 12, CYAN);
-        loading.setGravity(Gravity.CENTER);
-        splash.addView(loading);
-
-        final int[] value = {0};
-        Runnable task = new Runnable() {
-            @Override
+        final int[] n = {0};
+        Runnable r = new Runnable() {
             public void run() {
-                value[0] += 5;
-                progress.setProgress(value[0]);
-                loading.setText("INITIALIZING FBA... " + value[0] + "%");
-                if (value[0] < 100) {
-                    handler.postDelayed(this, 45);
-                } else {
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            showHome();
-                        }
-                    }, 250);
-                }
+                n[0] += 5;
+                p.setProgress(n[0]);
+                txt.setText("INITIALIZING FBA... " + n[0] + "%");
+                if (n[0] < 100) handler.postDelayed(this, 35);
+                else handler.postDelayed(() -> home(), 250);
             }
         };
-        handler.postDelayed(task, 100);
+        handler.postDelayed(r, 100);
     }
 
-    private void setupPage(String title) {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(BG);
+    void setup(String title) {
+        ScrollView sc = new ScrollView(this);
+        sc.setFillViewport(true);
+        sc.setBackgroundColor(bg);
 
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(20, 18, 20, 28);
-        root.setBackgroundColor(BG);
-        scroll.addView(root);
-        setContentView(scroll);
+        page = new LinearLayout(this);
+        page.setOrientation(1);
+        page.setPadding(16, 12, 16, 25);
+        page.setBackgroundColor(bg);
+        sc.addView(page);
+        setContentView(sc);
 
-        LinearLayout header = new LinearLayout(this);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout head = new LinearLayout(this);
+        head.setGravity(Gravity.CENTER_VERTICAL);
+        head.setPadding(4, 4, 4, 8);
 
-        TextView logo = text("FBA", 25, CYAN);
-        logo.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        header.addView(logo,
-            new LinearLayout.LayoutParams(75, 54));
+        TextView mark = label("FBA", 26, cyan);
+        mark.setTypeface(null, Typeface.BOLD);
+        head.addView(mark, new LinearLayout.LayoutParams(70, 48));
 
-        TextView pageTitle = text(title, 18, WHITE);
-        pageTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        header.addView(pageTitle,
-            new LinearLayout.LayoutParams(0, 54, 1));
+        TextView titleView = label(title, 18, white);
+        titleView.setTypeface(null, Typeface.BOLD);
+        head.addView(titleView, new LinearLayout.LayoutParams(0, 48, 1));
+        page.addView(head);
 
-        root.addView(header);
-        addLine(root);
-        content = root;
-    }
-
-    private void addLine(LinearLayout parent) {
         View line = new View(this);
-        line.setBackgroundColor(Color.rgb(25, 65, 90));
-        LinearLayout.LayoutParams p =
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 1
-            );
-        p.setMargins(0, 8, 0, 15);
-        parent.addView(line, p);
+        line.setBackgroundColor(Color.rgb(20, 64, 100));
+        page.addView(line, new LinearLayout.LayoutParams(-1, 1));
+
+        body = page;
     }
 
-    private void gap(int height) {
+    void space(int h) {
         View v = new View(this);
-        content.addView(v,
-            new LinearLayout.LayoutParams(1, height));
+        body.addView(v, new LinearLayout.LayoutParams(1, h));
     }
 
-    private TextView heading(String value) {
-        TextView t = text(value, 23, WHITE);
-        t.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        content.addView(t);
-        return t;
+    void heading(String s) {
+        TextView t = label(s, 22, white);
+        t.setTypeface(null, Typeface.BOLD);
+        body.addView(t);
     }
 
-    private TextView paragraph(String value) {
-        TextView t = text(value, 14, MUTED);
-        t.setGravity(Gravity.TOP);
-        content.addView(t);
-        return t;
+    void note(String s) {
+        body.addView(label(s, 13, muted));
     }
 
-    private Button button(String label, Runnable action) {
-        Button b = new Button(this);
-        b.setText(label);
-        b.setTextSize(15);
-        b.setAllCaps(false);
-        b.setTextColor(WHITE);
-        b.setBackgroundTintList(
-            android.content.res.ColorStateList.valueOf(PANEL)
-        );
+    void action(String title, String detail, String symbol,
+                Runnable run) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(0);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(12, 9, 12, 9);
+        card.setBackground(shape(panel, Color.rgb(14, 68, 105)));
 
-        LinearLayout.LayoutParams p =
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 58
-            );
-        p.setMargins(0, 7, 0, 7);
-        content.addView(b, p);
-        b.setOnClickListener(v -> action.run());
-        return b;
+        TextView ico = label(symbol, 25, cyan);
+        ico.setGravity(Gravity.CENTER);
+        card.addView(ico, new LinearLayout.LayoutParams(48, 52));
+
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(1);
+        TextView name = label(title, 15, white);
+        name.setTypeface(null, Typeface.BOLD);
+        TextView desc = label(detail, 11, muted);
+        texts.addView(name);
+        texts.addView(desc);
+        card.addView(texts, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView arrow = label("›", 27, cyan);
+        card.addView(arrow);
+
+        LinearLayout.LayoutParams cp =
+                new LinearLayout.LayoutParams(-1, -2);
+        cp.setMargins(0, 6, 0, 6);
+        body.addView(card, cp);
+        card.setMinimumHeight(72);
+        card.setClickable(true);
+        card.setOnClickListener(v -> run.run());
     }
 
-    private EditText edit(String hint) {
+    void button(String text, Runnable run) {
+        TextView b = label(text, 15, white);
+        b.setGravity(Gravity.CENTER);
+        b.setTypeface(null, Typeface.BOLD);
+        b.setBackground(shape(Color.rgb(0, 91, 160), cyan));
+        b.setPadding(12, 15, 12, 15);
+        b.setMinimumHeight(54);
+        LinearLayout.LayoutParams bp =
+                new LinearLayout.LayoutParams(-1, -2);
+        bp.setMargins(0, 6, 0, 6);
+        body.addView(b, bp);
+        b.setOnClickListener(v -> run.run());
+    }
+
+    EditText input(String hint) {
         EditText e = new EditText(this);
         e.setSingleLine(true);
-        e.setTextColor(WHITE);
-        e.setHintTextColor(MUTED);
+        e.setTextColor(white);
+        e.setHintTextColor(muted);
         e.setHint(hint);
-        e.setTextSize(15);
-        e.setPadding(15, 8, 15, 8);
-        e.setBackground(shape(PANEL, CYAN));
-
-        LinearLayout.LayoutParams p =
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 55
-            );
-        p.setMargins(0, 8, 0, 12);
-        content.addView(e, p);
+        e.setTextSize(14);
+        e.setPadding(14, 8, 14, 8);
+        e.setBackground(shape(panel, Color.rgb(0, 110, 180)));
+        LinearLayout.LayoutParams ip =
+                new LinearLayout.LayoutParams(-1, 54);
+        ip.setMargins(0, 5, 0, 12);
+        body.addView(e, ip);
         return e;
     }
 
-    private void showHome() {
-        setupPage("Dashboard");
-        gap(18);
+    void home() {
+        setup("FBA Builder v4.7");
+        space(12);
+        TextView hero = label("Build Your App.", 27, cyan);
+        hero.setTypeface(null, Typeface.BOLD);
+        body.addView(hero);
+        note("FREE BUILD ANDROID  •  CYBER WORKSPACE");
+        space(14);
 
-        TextView hero = heading("Build Something Amazing.");
-        hero.setTextColor(CYAN);
-        paragraph("Your Android workspace starts here.");
-        gap(15);
+        LinearLayout banner = new LinearLayout(this);
+        banner.setOrientation(1);
+        banner.setPadding(16, 18, 16, 18);
+        banner.setBackground(shape(panel, cyan));
+        TextView logo = label("◈  FBA", 34, cyan);
+        logo.setTypeface(null, Typeface.BOLD);
+        logo.setGravity(Gravity.CENTER);
+        banner.addView(logo);
+        TextView slogan = label(
+                "Dari Ide Menjadi Aplikasi\nDalam Genggamanmu",
+                14, white);
+        slogan.setGravity(Gravity.CENTER);
+        banner.addView(slogan);
+        body.addView(banner);
 
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(18, 18, 18, 18);
-        card.setBackground(shape(PANEL, CYAN));
-
-        TextView badge = text("FBA BUILDER  /  VERSION 1.0", 12, CYAN);
-        card.addView(badge);
-
-        TextView desc = text(
-            "Create projects, manage your work, and prepare Android builds.",
-            15, WHITE
-        );
-        desc.setPadding(4, 15, 4, 15);
-        card.addView(desc);
-        content.addView(card);
-        gap(18);
-
+        space(14);
         heading("WORKSPACE");
-        button("＋   Buat APK", () -> showCreate());
-        button("▣   APK Saya", () -> showProjects());
-        button("⚙   Pengaturan", () -> showSettings());
-        button("ⓘ   Tentang FBA", () -> showAbout());
+        action("Buat APK", "Bangun aplikasi dari proyekmu", "✚",
+                () -> create());
+        action("Proyek Saya", "Kelola proyek aplikasi", "▣",
+                () -> projectPage());
+        action("Build", "Lihat status proses build", "⚡",
+                () -> buildPage());
+        action("Pengaturan", "Preferensi aplikasi", "⚙",
+                () -> settings());
+        action("Tentang FBA", "Informasi versi aplikasi", "ⓘ",
+                () -> about());
 
-        gap(15);
-        status = paragraph("SYSTEM READY  •  FBA is running");
-        status.setTextColor(CYAN);
-        gap(12);
-        paragraph("FBA • FREE BUILD ANDROID");
+        space(12);
+        note("FBA • FREE BUILD ANDROID");
     }
 
-    private void showCreate() {
-        setupPage("Create Project");
-        button("←   Kembali ke Beranda", () -> showHome());
-        gap(12);
-        heading("Buat Proyek Baru");
-        paragraph("Masukkan nama dan pilih ikon aplikasi.");
-        gap(10);
+    void create() {
+        setup("Buat APK");
+        button("←  Kembali ke Beranda", () -> home());
+        space(8);
+        heading("Detail Aplikasi");
+        note("01 / NAMA APLIKASI");
+        appName = input("MyApp_Pro");
+        note("02 / NAMA DEVELOPER");
+        developer = input("Nama developer");
+        note("03 / IKON APLIKASI");
 
-        nameInput = edit("Nama aplikasi");
+        iconText = label("◈  Ikon default FBA", 16, cyan);
+        iconText.setGravity(Gravity.CENTER);
+        iconText.setBackground(shape(panel, cyan));
+        body.addView(iconText, new LinearLayout.LayoutParams(-1, 100));
 
-        iconPreview = new ImageView(this);
-        iconPreview.setImageDrawable(
-            getDrawable(android.R.drawable.sym_def_app_icon)
-        );
-        iconPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        iconPreview.setBackground(shape(PANEL, CYAN));
+        button("Pilih Foto Ikon", () -> pickIcon());
+        note("04 / SUMBER PROYEK");
+        action("Unggah ZIP source code",
+                "Pilih file ZIP proyek Android", "▤",
+                () -> pickZip());
 
-        LinearLayout.LayoutParams ip =
-            new LinearLayout.LayoutParams(120, 120);
-        ip.gravity = Gravity.CENTER_HORIZONTAL;
-        ip.setMargins(0, 12, 0, 8);
-        content.addView(iconPreview, ip);
-
-        iconLabel = text("Ikon default", 13, MUTED);
-        iconLabel.setGravity(Gravity.CENTER);
-        content.addView(iconLabel);
-
-        button("Pilih Foto Ikon", () -> pickImage());
-
-        button("Impor ZIP Proyek", () -> {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-            intent.setType("application/zip");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            try {
-                startActivityForResult(intent, 202);
-            } catch (Exception e) {
-                showToast("Pemilih file tidak tersedia.");
-            }
-        });
-
-        button("Buka Editor Kode", () -> {
-            showEditor();
-        });
-
-        gap(12);
-        button("Simpan Proyek", () -> {
-            String name = nameInput.getText().toString().trim();
-            if (name.isEmpty()) {
-                nameInput.setError("Masukkan nama aplikasi");
+        button("⚡  Bangun APK", () -> {
+            String n = appName.getText().toString().trim();
+            if (n.isEmpty()) {
+                appName.setError("Isi nama aplikasi");
                 return;
             }
-            projects.add(name);
-            showToast("Proyek " + name + " berhasil ditambahkan.");
-            showProjects();
+            if (!projects.contains(n)) projects.add(n);
+            buildPage();
         });
 
-        paragraph(
-            "Catatan: menyimpan proyek di versi ini mencatat namanya dalam sesi aplikasi. Impor ZIP belum menjalankan build."
-        );
+        note("Build sungguhan membutuhkan source code dan mesin build yang terhubung.");
     }
 
-    private void pickImage() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("image/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        try {
-            startActivityForResult(intent, 101);
-        } catch (Exception e) {
-            showToast("Galeri tidak tersedia.");
-        }
+    void pickIcon() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.setType("image/*");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(i, 101);
+    }
+
+    void pickZip() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.setType("application/zip");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(i, 102);
     }
 
     @Override
-    protected void onActivityResult(
-        int requestCode, int resultCode, Intent data
-    ) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK || data == null) return;
-
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (res != RESULT_OK || data == null) return;
         Uri uri = data.getData();
         if (uri == null) return;
 
-        if (requestCode == 101) {
-            try {
-                selectedImage = uri;
-                Bitmap bitmap = BitmapFactory.decodeStream(
-                    getContentResolver().openInputStream(uri)
-                );
-                if (bitmap != null) {
-                    iconPreview.setImageBitmap(bitmap);
-                    iconLabel.setText("Foto dipilih • pratinjau ikon");
-                    showToast("Foto ikon berhasil dipilih.");
-                }
-            } catch (Exception e) {
-                showToast("Gagal membuka foto.");
-            }
-        } else if (requestCode == 202) {
-            showToast("ZIP dipilih. Build ZIP belum diaktifkan.");
+        if (req == 101) {
+            chosenIcon = uri;
+            if (iconText != null) iconText.setText("✓  Foto ikon dipilih");
+            Toast.makeText(this, "Foto ikon dipilih", Toast.LENGTH_SHORT).show();
+        } else if (req == 102) {
+            Toast.makeText(this,
+                    "ZIP dipilih. Mesin build belum terhubung.",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
-    private void showEditor() {
-        setupPage("Code Editor");
-        button("←   Kembali", () -> showCreate());
-        heading("Editor Kode");
-        paragraph("Tulis catatan atau kode awal proyek di bawah.");
-        EditText code = new EditText(this);
-        code.setGravity(Gravity.TOP | Gravity.START);
-        code.setMinLines(10);
-        code.setTextColor(WHITE);
-        code.setHintTextColor(MUTED);
-        code.setHint("Tulis kode di sini...");
-        code.setPadding(14, 14, 14, 14);
-        code.setBackground(shape(PANEL, CYAN));
-        content.addView(code,
-            new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 260
-            ));
-        button("Simpan Catatan", () ->
-            showToast("Editor ini belum terhubung ke mesin build.")
-        );
-        paragraph("Kode yang ditulis belum dikompilasi menjadi APK.");
-    }
-
-    private void showProjects() {
-        setupPage("My Projects");
-        button("←   Kembali ke Beranda", () -> showHome());
-        gap(10);
-        heading("APK Saya");
-        paragraph("Daftar proyek yang ditambahkan pada sesi ini.");
-        gap(10);
-
+    void projectPage() {
+        setup("Proyek Saya");
+        button("←  Kembali", () -> home());
+        space(8);
+        heading("Semua Proyek");
         if (projects.isEmpty()) {
-            LinearLayout empty = new LinearLayout(this);
-            empty.setOrientation(LinearLayout.VERTICAL);
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(15, 28, 15, 28);
-            empty.setBackground(shape(PANEL, 0));
-
-            TextView symbol = text("▣", 40, CYAN);
-            symbol.setGravity(Gravity.CENTER);
-            empty.addView(symbol);
-
-            TextView msg = text("Belum ada proyek", 18, WHITE);
-            msg.setGravity(Gravity.CENTER);
-            empty.addView(msg);
-
-            TextView detail = text(
-                "Buat proyek pertamamu untuk memulai.",
-                13, MUTED
-            );
-            detail.setGravity(Gravity.CENTER);
-            empty.addView(detail);
-            content.addView(empty);
+            note("Belum ada proyek. Tekan Buat APK untuk memulai.");
         } else {
-            for (int i = 0; i < projects.size(); i++) {
-                final int index = i;
-                LinearLayout card = new LinearLayout(this);
-                card.setOrientation(LinearLayout.VERTICAL);
-                card.setPadding(15, 12, 15, 12);
-                card.setBackground(shape(PANEL, CYAN));
-
-                TextView name = text(projects.get(i), 18, WHITE);
-                card.addView(name);
-
-                TextView state = text(
-                    "Draft • Belum dibuild", 13, MUTED
-                );
-                card.addView(state);
-
-                content.addView(card,
-                    new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    ));
-
-                button("Lihat Status", () ->
-                    showToast("Proyek masih berupa draft.")
-                );
-                button("Hapus Proyek", () -> {
-                    projects.remove(index);
-                    showProjects();
-                });
-                gap(8);
+            for (String n : new ArrayList<>(projects)) {
+                action(n, "Draft • Belum dibuild", "▣",
+                        () -> projectDetail(n));
             }
         }
-
-        gap(12);
-        button("＋   Buat Proyek Baru", () -> showCreate());
+        button("+  Buat Proyek", () -> create());
     }
 
-    private void showSettings() {
-        setupPage("Settings");
-        button("←   Kembali ke Beranda", () -> showHome());
-        gap(12);
-        heading("Pengaturan");
-        paragraph("Sesuaikan informasi dasar aplikasi.");
-        gap(10);
-
-        button("Bahasa: Indonesia", () ->
-            showToast("Bahasa Indonesia dipilih.")
-        );
-        button("Tema: Blue Cyber", () ->
-            showToast("Tema biru cyber sedang digunakan.")
-        );
-        button("Info Aplikasi", () -> showAbout());
-
-        gap(18);
-        paragraph("FBA Builder • Version 1.0");
-        paragraph("Dibuat untuk membantu pengembangan proyek Android.");
+    void projectDetail(String name) {
+        setup("Detail Proyek");
+        button("←  Kembali", () -> projectPage());
+        heading(name);
+        note("Status: Draft");
+        note("Belum ada file APK yang dihasilkan.");
+        button("Lihat Build", () -> buildPage());
+        button("Hapus Proyek", () -> {
+            projects.remove(name);
+            projectPage();
+        });
     }
 
-    private void showAbout() {
-        setupPage("About FBA");
-        gap(25);
+    void buildPage() {
+        setup("Proses Build");
+        button("←  Kembali ke Beranda", () -> home());
+        space(10);
+        heading("Status Pembuatan APK");
+        note("Proyek belum dikirim ke mesin build.");
+        action("1. Validasi proyek", "Menunggu source code", "○",
+                () -> message("Pilih source code proyek terlebih dahulu."));
+        action("2. Setup lingkungan", "Belum dijalankan", "○",
+                () -> message("Mesin build belum terhubung."));
+        action("3. Kompilasi Android", "Belum dijalankan", "○",
+                () -> message("Belum ada proses kompilasi."));
+        action("4. Hasil APK", "Belum tersedia", "○",
+                () -> message("APK belum dihasilkan."));
+        note("Status ini bukan progres build nyata.");
+    }
 
-        TextView logo = text("FBA", 48, CYAN);
+    void settings() {
+        setup("Pengaturan");
+        button("←  Kembali", () -> home());
+        heading("Preferensi");
+        action("Bahasa", "Indonesia", "文",
+                () -> message("Bahasa Indonesia aktif."));
+        action("Tema", "Dark Cyber Blue", "◐",
+                () -> message("Tema biru gelap sedang digunakan."));
+        action("Notifikasi", "Pengaturan notifikasi", "♧",
+                () -> message("Pengaturan notifikasi belum tersedia."));
+        action("Keamanan", "Pengaturan keamanan", "♙",
+                () -> message("Fitur keamanan lanjutan belum tersedia."));
+        action("Data & Penyimpanan", "Kelola data aplikasi", "▤",
+                () -> message("Penyimpanan proyek permanen belum dibuat."));
+        action("Tentang", "FBA Builder v4.7", "ⓘ",
+                () -> about());
+    }
+
+    void about() {
+        setup("Tentang FBA");
+        TextView logo = label("◈ FBA", 40, cyan);
         logo.setGravity(Gravity.CENTER);
-        logo.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        content.addView(logo);
-
-        TextView sub = text("FREE BUILD ANDROID", 15, WHITE);
-        sub.setGravity(Gravity.CENTER);
-        content.addView(sub);
-
-        gap(20);
-        paragraph(
-            "FBA adalah antarmuka awal untuk mengelola proyek aplikasi Android."
-        );
-        gap(10);
-        paragraph(
-            "Versi ini menyediakan navigasi, pemilih foto, form proyek, dan daftar draft. Mesin build otomatis dan ekspor APK masih perlu dikembangkan."
-        );
-        gap(20);
-        button("←   Kembali ke Beranda", () -> showHome());
+        body.addView(logo);
+        heading("FREE BUILD ANDROID");
+        note("Antarmuka awal FBA Builder.");
+        note("Login tidak digunakan. Aplikasi langsung membuka beranda.");
+        note("Fitur build APK nyata masih perlu integrasi mesin build.");
+        button("Kembali ke Beranda", () -> home());
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    void message(String s) {
+        Toast.makeText(this, s, Toast.LENGTH_LONG).show();
     }
 
     @Override
